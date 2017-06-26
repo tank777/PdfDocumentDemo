@@ -10,6 +10,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/scroll_view">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -20,6 +24,11 @@
         android:textColor="@android:color/black"
         android:fontFamily="sans-serif-condensed"
         android:text="@string/text" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/iv"/>
+    </LinearLayout>
 </android.support.v4.widget.NestedScrollView>
     <Button
         android:layout_width="match_parent"

@@ -1,6 +1,8 @@
 package com.bgt.pdfdocumentdemo;
 
+import android.graphics.Bitmap;
 import android.graphics.pdf.PdfDocument;
+import android.media.Image;
 import android.os.Environment;
 import android.print.PrintAttributes;
 import android.print.pdf.PrintedPdfDocument;
@@ -9,27 +11,84 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.hendrix.pdfmyxml.viewRenderer.AbstractViewRenderer;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+
 public class MainActivity extends AppCompatActivity {
+
+    ImageView imageView;
+    TextView textView;
+    byte[] byteArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textView = (TextView) findViewById(R.id.tv);
+        imageView = (ImageView) findViewById(R.id.iv);
+        Glide.with(getApplicationContext()).load(R.drawable.electric)
+                .asBitmap()
+                .into(new SimpleTarget<Bitmap>(200, 200) {
+                    @Override
+                    public void onResourceReady(Bitmap resource, GlideAnimation glideAnimation) {
+
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        resource.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        byteArray = stream.toByteArray();
+                        imageView.setImageBitmap(resource);
+                    }
+                });
     }
 
     public void mCreatePdf(View v) {
 
-        mCreatePdfDocument();
+        //mCreatePdfDocument();
         //mCreatePDfDocumentLib();
+        String text = textView.getText().toString();
+        if (byteArray != null && byteArray.length != 0) {
+            mCreatePDfDocumentItext(byteArray, text);
+        }
 
+
+    }
+
+    private void mCreatePDfDocumentItext(byte[] byteArray, String text) {
+
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), "PDF IText");
+
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                Log.d("App", "failed to create directory");
+            }
+        }
+
+        try {
+            File f = new File(mediaStorageDir, "share.pdf");
+            Document document = new Document();
+            PdfWriter.getInstance(document, new FileOutputStream(f));
+            document.open();
+            Paragraph p = new Paragraph(text);
+            document.add(p);
+            com.itextpdf.text.Image image = com.itextpdf.text.Image.getInstance(byteArray);
+            document.add(image);
+            document.close();
+        } catch (Exception e) {
+            e.fillInStackTrace();
+        }
     }
 
     private void mCreatePDfDocumentLib() {
@@ -37,10 +96,9 @@ public class MainActivity extends AppCompatActivity {
         AbstractViewRenderer page = new AbstractViewRenderer(getApplicationContext(), R.layout.activity_main) {
 
 
-
             @Override
             protected void initView(View view) {
-                TextView tv_hello = (TextView)view.findViewById(R.id.tv);
+                TextView tv_hello = (TextView) view.findViewById(R.id.tv);
                 Button button = (Button) view.findViewById(R.id.bt);
                 button.setVisibility(View.GONE);
             }
@@ -48,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
 // you can reuse the bitmap if you want
         //page.setReuseBitmap(true);
 
-        final com.hendrix.pdfmyxml.PdfDocument doc            = new com.hendrix.pdfmyxml.PdfDocument(MainActivity.this);
+        final com.hendrix.pdfmyxml.PdfDocument doc = new com.hendrix.pdfmyxml.PdfDocument(MainActivity.this);
 
 // add as many pages as you have
         doc.addPage(page);
@@ -63,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
         doc.setListener(new com.hendrix.pdfmyxml.PdfDocument.Callback() {
             @Override
             public void onComplete(File file) {
-                Log.i(com.hendrix.pdfmyxml.PdfDocument.TAG_PDF_MY_XML, "Complete"+file.getPath());
+                Log.i(com.hendrix.pdfmyxml.PdfDocument.TAG_PDF_MY_XML, "Complete" + file.getPath());
 
             }
 
